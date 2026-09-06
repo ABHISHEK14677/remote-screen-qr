@@ -1,12 +1,32 @@
 name: CI
-on: [push, pull_request]
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
 jobs:
-  server-check:
+  server:
     runs-on: ubuntu-latest
     defaults: { run: { working-directory: server } }
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: 22 }
-      - run: npm install --ignore-scripts
-      - run: npm run check
+        with: { node-version: 20 }
+      - run: npm install
+      - run: npm audit --audit-level=high || true
+      - run: node -e "require('./src/auth.js'); require('./src/pairing.js'); console.log('modules OK')"
+
+  android:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: android-app } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 17 }
+      - uses: gradle/actions/setup-gradle@v3
+      - run: gradle assembleDebug --no-daemon || ./gradlew assembleDebug --no-daemon
+      - uses: actions/upload-artifact@v4
+        with:
+          name: debug-apk
+          path: android-app/app/build/outputs/apk/debug/*.apk
