@@ -1,15 +1,37 @@
 # Remote Screen QR
 
-Consent-based Android screen sharing paired to an operator dashboard with a QR code.
+QR-based remote Android screen access tool for remote support, device testing, and MDM.
+
+⚠️ **Authorized use only** — for administering devices you own or have explicit permission to support.
+
+## Architecture
+[Device app] --MediaProjection--> [WebSocket relay] <--[Operator dashboard]
+       ^__________ QR contains pairing token (one-time, 120s TTL) __________|
 
 ## Components
+| Folder        | Tech          | Purpose                        |
+|---------------|---------------|--------------------------------|
+| `android-app` | Kotlin, OkHttp| Screen capture + WS stream     |
+| `server`      | Node.js, ws   | Pairing + relay (wss/TLS)      |
+| `dashboard`   | HTML/JS       | Live viewer + QR generator     |
 
-- `android-app/` — Android client. Screen capture always begins through Android's system consent dialog.
-- `server/` — pairing and signaling relay; no persistent access tokens are issued.
-- `dashboard/` — browser viewer and pairing-QR generator.
+## Quick Start
+### Server
+    cd server
+    cp .env.example .env   # then edit JWT_SECRET
+    npm install && npm start
 
-## Safety model
+### Dashboard
+    cd dashboard && python3 -m http.server 8080
 
-Pairing sessions are short-lived and should be protected with TLS in production. The Android app must display a persistent foreground notification while sharing and offer a visible stop control.
+### Android
+    # Open android-app/ in Android Studio, build, install
 
-See [the architecture notes](docs/architecture.md).
+## Security
+- One-time short-TTL JWT in QR payload
+- TLS (wss://) enforced
+- One viewer per pairing token
+- Auto-shutdown on token expiry
+
+## License
+MIT
