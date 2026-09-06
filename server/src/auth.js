@@ -1,7 +1,16 @@
-export function requireOperator(req, res, next) {
-  const supplied = req.get('authorization')?.replace(/^Bearer\s+/i, '');
-  if (!process.env.OPERATOR_API_KEY || supplied !== process.env.OPERATOR_API_KEY) {
-    return res.status(401).json({ error: 'unauthorized' });
-  }
-  next();
+const jwt = require("jsonwebtoken");
+
+function mintPairingToken(deviceId, ttlSeconds) {
+  return jwt.sign({ d: deviceId, jti: require("crypto").randomUUID() },
+    process.env.JWT_SECRET, { expiresIn: Number(ttlSeconds) });
 }
+
+function verifyToken(token) {
+  try {
+    return jwt.verify(token, process.env.JWT_SECRET);
+  } catch {
+    return null;
+  }
+}
+
+module.exports = { mintPairingToken, verifyToken };
