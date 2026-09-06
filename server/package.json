@@ -2,10 +2,14 @@
   "name": "remote-screen-relay",
   "version": "1.0.0",
   "main": "src/index.js",
-  "scripts": { "start": "node src/index.js", "dev": "node --watch src/index.js" },
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
   "dependencies": {
-    "ws": "^8.17.0",
+    "dotenv": "^16.4.5",
     "jsonwebtoken": "^9.0.2",
-    "dotenv": "^16.4.5"
+    "qrcode": "^1.5.4",
+    "ws": "^8.17.0"
   }
 }
