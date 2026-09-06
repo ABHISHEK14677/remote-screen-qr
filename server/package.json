@@ -1,8 +1,11 @@
 {
-  "name": "remote-screen-qr-relay",
-  "version": "0.1.0",
-  "private": true,
-  "type": "module",
-  "scripts": { "start": "node src/index.js", "check": "node --check src/index.js && node --check src/auth.js && node --check src/pairing.js" },
-  "dependencies": { "dotenv": "^16.4.5", "express": "^4.21.0", "socket.io": "^4.8.0" }
+  "name": "remote-screen-relay",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "scripts": { "start": "node src/index.js", "dev": "node --watch src/index.js" },
+  "dependencies": {
+    "ws": "^8.17.0",
+    "jsonwebtoken": "^9.0.2",
+    "dotenv": "^16.4.5"
+  }
 }
