@@ -1,9 +1,32 @@
 # Architecture
 
-1. The dashboard requests a short-lived pairing ID from the relay and encodes it in a QR code.
-2. The Android client scans the QR code, validates the server origin, and joins that pairing ID.
-3. The client requests Android MediaProjection consent. It streams only after the user approves it.
-4. The relay forwards WebRTC signaling; media flows peer-to-peer when possible, otherwise through a configured TURN server.
-5. Either participant can end the session; the client foreground service immediately stops capture.
+## Overview
 
-Production deployments should use HTTPS/WSS, authenticated operators, rate limits, expiry, audit logs, and a TURN server with ephemeral credentials.
+┌────────────────┐    MediaProjection     ┌──────────────┐   wss    ┌───────────────┐
+│  Android App   │ ── JPEG frames ───────▶│  Relay Server│◀────wss──│   Dashboard   │
+│ (streamer)     │                        │  (Node.js)   │          │ (viewer + QR) │
+└───────▲────────┘                        └──────▲───────┘          └───────┬───────┘
+        │            scans QR (JWT pairing token)│                          │
+        └────────────────────────────────────────┴──────────────────────────┘
+                    QR payload: rsx://<host>?t=<one-time JWT>&d=<deviceId>
+
+## Flow
+1. Operator opens dashboard → server mints one-time JWT (TTL 120s) for a device ID.
+2. Dashboard renders styled QR containing the relay URL + token.
+3. Android app scans QR (ZXing), connects via WSS as `role=device`.
+4. Dashboard connects as `role=viewer` for the same device ID; server pairs them.
+5. App captures screen via MediaProjection, compresses frames to JPEG, streams
+   binary WebSocket messages.
+6. Server forwards device frames to the paired viewer only.
+7. When the token expires or the socket closes, the session is torn down.
+
+## Security Model
+- JWT is single-use and short-lived; verified server-side on connect.
+- Relay enforces one device + one viewer per session.
+- TLS mandatory in production (terminate at reverse proxy or wss server).
+- No frames are persisted; relay is stateless beyond the live session map.
+
+## Future Extensions
+- Touch/control injection (Accessibility / instrumentation channel)
+- E2E encryption of frame stream (libsodium sealed boxes)
+- Multi-viewer read-only sessions with per-viewer tokens
