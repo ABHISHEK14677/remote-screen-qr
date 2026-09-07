@@ -24,17 +24,18 @@ cd server
 cp .env.example .env      # then edit JWT_SECRET
 npm install && npm start
 
-### 2.Dashboard
-'''bash
+### 2. Dashboard
+```bash
 cd dashboard
 python3 -m http.server 8080
-# open http://localhost:8080'''
+# open http://localhost:8080
+```
 
-###3. Android App
-Open android-app/ in Android Studio → Build → Install on device. Scan the QR shown on the dashboard; streaming starts after you grant screen-capture consent.
+### 3. Android App
+Open `android-app/` in Android Studio → Build → Install on device.
 
-Security
-One-time, short-TTL JWT embedded in the QR payload
-TLS (wss://) enforced in production
-One viewer per pairing token
-Auto-shutdown when the pairing token expires
+## Security
+- One-time, short-TTL JWT embedded in the QR payload
+- TLS (wss://) enforced in production
+- One viewer per pairing token
+- Auto-shutdown when the pairing token expires
