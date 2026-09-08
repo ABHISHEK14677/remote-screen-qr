@@ -10,28 +10,39 @@ async function generatePairing() {
   const deviceId = $("deviceId").value.trim() || "device-01";
   const status = $("status");
   try {
-    // Relay server must be reachable; adjust host if remote
     const res = await fetch(`http://localhost:8443/pair?d=${encodeURIComponent(deviceId)}`);
     if (!res.ok) throw new Error("relay error " + res.status);
     const data = await res.json();
 
-    // Use styled QR library
-    const host = new URL(data.payload.replace("rsx://", "https://")).host;
-    const payload = window.QrGen.qrPayload(host, data.token, deviceId);
-    window.QrGen.buildQr(payload, {
-      dotColor: $("dotColor").value,
-      cornerColor: $("cornerColor").value,
-      dotStyle: $("dotStyle").value,
-    });
+    // If QrGen is loaded, use it; otherwise fallback to the server's generated QR code
+    if (window.QrGen && typeof window.QrGen.qrPayload === "function") {
+      const host = new URL(data.payload.replace("rsx://", "https://")).host;
+      const payload = window.QrGen.qrPayload(host, data.token, deviceId);
+      window.QrGen.buildQr(payload, {
+        dotColor: $("dotColor").value,
+        cornerColor: $("cornerColor").value,
+        dotStyle: $("dotStyle").value,
+      });
+    } else {
+      // Fallback: display the pre-rendered QR image directly from the server
+      let qrImg = document.getElementById("qr") || document.querySelector("#qrContainer img");
+      if (!qrImg) {
+        qrImg = document.createElement("img");
+        qrImg.id = "qr";
+        const container = document.getElementById("qrContainer") || document.querySelector(".panel") || document.body;
+        container.appendChild(qrImg);
+      }
+      qrImg.src = data.qrDataUrl;
+      qrImg.style.display = "block";
+      qrImg.style.maxWidth = "280px";
+      qrImg.style.margin = "12px auto";
+    }
 
     status.textContent = `QR ready — expires in ${data.ttl}s. Scan with the Android app.`;
   } catch (e) {
     status.textContent = "Failed to reach relay: " + e.message;
   }
 }
-
-$("pairBtn").addEventListener("click", generatePairing);
-$("restyleBtn").addEventListener("click", () => generatePairing());
 
 // ---------- Viewer ----------
 function connectViewer() {
